@@ -8,7 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Kullanıcı yapısı
+
 type User struct {
 	ID       int    `db:"id"`
 	Name     string `db:"name"`
@@ -24,19 +24,15 @@ func main() {
 	}
 	defer db.Close()
 
-	// Tabloyu oluştur
+	
 	createTable := `
     (
 		id SERIAL PRIMARY KEY,
 		name VARCHAR(255) NOT NULL,
 		password VARCHAR(255) NOT NULL
 	);`
-	_, err = db.Exec(createTable)
-	if err != nil {
-		log.Fatalf("Tablo oluşturulurken hata oluştu: %v", err)
-	}
-
-	// Verileri ekle
+	db.Exec(createTable)
+	
 	insertData := `
 	INSERT INTO users (name, password)
 	VALUES
@@ -47,14 +43,14 @@ func main() {
 		log.Fatalf("Veri eklenirken hata oluştu: %v", err)
 	}
 
-	// Verileri sorgula
+	
 	var users []User
 	err = db.Select(&users, "SELECT * FROM users;")
 	if err != nil {
 		log.Fatalf("Veri sorgulanırken hata oluştu: %v", err)
 	}
 
-	// Sonuçları yazdır
+	
 	fmt.Println("Kayıtlı Kullanıcılar:")
 	for _, user := range users {
 		fmt.Printf("ID: %d, Name: %s, Password: %s\n", user.ID, user.Name, user.Password)
