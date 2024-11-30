@@ -8,7 +8,7 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
-// Kullanıcı yapısını tanımlıyoruz
+
 type User struct {
 	ID       int    `db:"id"`
 	Name     string `db:"name"`
@@ -24,7 +24,6 @@ func main() {
 	}
 	defer db.Close()
 
-	// Fiber uygulamasını oluştur
 	app := fiber.New()
 
 	// Anasayfa endpoint'i
@@ -48,7 +47,6 @@ func main() {
 		// Sonuçları depolayacağımız bir dilim (slice)
 		var results []fiber.Map
 
-		// Her kullanıcı için giriş kontrolü yapıyoruz
 		for _, input := range inputs {
 			var user User
 			query := "SELECT id, name, password FROM users WHERE name = $1"
@@ -62,18 +60,17 @@ func main() {
 						"login": "Kullanıcı bulunamadı",
 					})
 				} else {
-					// Diğer veritabanı hatalarını handle et
 					return c.Status(fiber.StatusInternalServerError).SendString("Veritabanı hatası")
 				}
 			} else {
-				// Kullanıcı bulundu ve şifre doğruysa
+				
 				if input.Password == user.Password {
 					results = append(results, fiber.Map{
 						"name":  input.Name,
 						"login": "Başarılı",
 					})
 				} else {
-					// Şifre yanlışsa
+					
 					results = append(results, fiber.Map{
 						"name":  input.Name,
 						"login": "Hatalı şifre",
@@ -82,7 +79,7 @@ func main() {
 			}
 		}
 
-		// Tüm sonuçları döndür
+		
 		return c.JSON(results)
 	})
 
