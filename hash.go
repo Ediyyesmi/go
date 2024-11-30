@@ -52,7 +52,7 @@ func main() {
 			return c.Status(fiber.StatusInternalServerError).SendString("Kullanıcı kaydı sırasında hata oluştu")
 		}
 
-		
+		// yeni kullanıcıyı ekledik
 		queryInsert := "INSERT INTO users (name, password) VALUES ($1, $2)"
 		db.Exec(queryInsert, input.Name, string(hashedPassword)) 
 
@@ -78,21 +78,8 @@ func main() {
 		for _, input := range inputs {
 			var user User
 			query := "SELECT id, name, password FROM users WHERE name = $1"
-			err := db.QueryRow(query, input.Name).Scan(&user.ID, &user.Name, &user.Password)
+			db.QueryRow(query, input.Name).Scan(&user.ID, &user.Name, &user.Password)
 
-			if err != nil {
-				
-				if err == sql.ErrNoRows {
-					results = append(results, fiber.Map{
-						"name":  input.Name,
-						"login": "Kullanıcı bulunamadı",
-					})
-				} else {
-					// Diğer veritabanı hatalarını handle et
-					return c.Status(fiber.StatusInternalServerError).SendString("Veritabanı hatası")
-				}
-			} else {
-				
 				err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 				if err != nil {
 					results = append(results, fiber.Map{
