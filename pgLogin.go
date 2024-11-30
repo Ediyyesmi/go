@@ -44,25 +44,13 @@ func main() {
 			return c.Status(fiber.StatusBadRequest).SendString("Geçersiz giriş verisi")
 		}
 
-		// Sonuçları depolayacağımız bir dilim (slice)
+		// Sonuçları depola
 		var results []fiber.Map
 
 		for _, input := range inputs {
 			var user User
 			query := "SELECT id, name, password FROM users WHERE name = $1"
-			err := db.QueryRow(query, input.Name).Scan(&user.ID, &user.Name, &user.Password)
-
-			if err != nil {
-				// Kullanıcı bulunamazsa
-				if err == sql.ErrNoRows {
-					results = append(results, fiber.Map{
-						"name":  input.Name,
-						"login": "Kullanıcı bulunamadı",
-					})
-				} else {
-					return c.Status(fiber.StatusInternalServerError).SendString("Veritabanı hatası")
-				}
-			} else {
+			db.QueryRow(query, input.Name).Scan(&user.ID, &user.Name, &user.Password)
 				
 				if input.Password == user.Password {
 					results = append(results, fiber.Map{
