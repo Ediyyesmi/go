@@ -1,4 +1,4 @@
-// şifreleri postgreste hash'leyerek tutar
+// şifreleri hash'leyerek postgreste tutar
 
 package main
 
