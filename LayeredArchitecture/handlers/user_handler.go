@@ -1,54 +1,48 @@
 package handlers
 
 import (
-	"database/sql"
-	"project/repositories"
-	"project/services"
-
 	"github.com/gofiber/fiber/v2"
+	"project/services"
 )
 
-func SetupRoutes(app *fiber.App, db *sql.DB) {
-	// UserRepository oluştur
-	userRepo := repositories.NewUserRepository(db)
+type UserHandler struct {
+	Service *services.UserService
+}
 
-	// UserService oluştur
-	userService := services.NewUserService(userRepo)
+func NewUserHandler(service *services.UserService) *UserHandler {
+	return &UserHandler{Service: service}
+}
 
-	app.Post("/register", func(c *fiber.Ctx) error {
-		var input struct {
-			Name     string `json:"name"`
-			Password string `json:"password"`
-		}
-		if err := c.BodyParser(&input); err != nil {
-			return c.Status(fiber.StatusBadRequest).SendString("Geçersiz giriş verisi")
-		}
+func (h *UserHandler) Register(c *fiber.Ctx) error {
+	var input struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid input")
+	}
 
-		if err := userService.RegisterUser(input.Name, input.Password); err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString("Kayıt hatası")
-		}
+	err := h.Service.RegisterUser(input.Name, input.Password)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
 
-		return c.Status(fiber.StatusCreated).SendString("Kullanıcı başarıyla kaydedildi")
-	})
+	return c.Status(fiber.StatusCreated).SendString("User registered successfully")
+}
 
-	app.Post("/login", func(c *fiber.Ctx) error {
-		var input struct {
-			Name     string `json:"name"`
-			Password string `json:"password"`
-		}
-		if err := c.BodyParser(&input); err != nil {
-			return c.Status(fiber.StatusBadRequest).SendString("Geçersiz giriş verisi")
-		}
+func (h *UserHandler) Login(c *fiber.Ctx) error {
+	var input struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid input")
+	}
 
-		success, err := userService.AuthenticateUser(input.Name, input.Password)
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).SendString("Kimlik doğrulama hatası")
-		}
+	isAuthenticated, err := h.Service.AuthenticateUser(input.Name, input.Password)
+	if err != nil || !isAuthenticated {
+		return c.Status(fiber.StatusUnauthorized).SendString("Invalid credentials")
+	}
 
-		if !success {
-			return c.Status(fiber.StatusUnauthorized).SendString("Geçersiz kullanıcı adı veya şifre")
-		}
-
-		return c.SendString("Başarıyla giriş yapıldı")
-	})
+	return c.Status(fiber.StatusOK).SendString("Login successful")
 }
