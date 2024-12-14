@@ -4,21 +4,32 @@ import (
 	"database/sql"
 	"log"
 	"project/handlers"
+	"project/repositories"
+	"project/services"
 
-	_ "github.com/lib/pq" 
 	"github.com/gofiber/fiber/v2"
+	_ "github.com/lib/pq"
 )
 
-func main(){
-	app:= fiber.New()
-
-	db, err := sql.Open("postgres", "user=postgres password=12345 dbname=kisiler sslmode=disable")
+func main() {
+	// Veritabanı bağlantısı
+	dsn := "user=postgres password=12345 dbname=kisiler sslmode=disable"
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatal("veritabanına bağlanılamadı: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	handlers.SetupRoutes(app,db)
+	// Katmanları başlat
+	userRepo := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
+
+	// Fiber uygulamasını başlat
+	app := fiber.New()
+
+	app.Post("/register", userHandler.Register)
+	app.Post("/login", userHandler.Login)
 
 	log.Fatal(app.Listen(":8082"))
 }
